@@ -10,127 +10,129 @@ import random,util,math
 from collections import defaultdict
 
 class QLearningAgent(ReinforcementAgent):
-  """
-    Q-Learning Agent
-
-    Instance variables you have access to
-      - self.epsilon (exploration prob)
-      - self.alpha (learning rate)
-      - self.discount (discount rate aka gamma)
-
-    Functions you should use
-      - self.getLegalActions(state)
-        which returns legal actions for a state
-      - self.getQValue(state,action)
-        which returns Q(state,action)
-      - self.setQValue(state,action,value)
-        which sets Q(state,action) := value
-    
-    !!!Important!!!
-    NOTE: please avoid using self._qValues directly to make code cleaner
-  """
-  def __init__(self, **args):
-    "We initialize agent and Q-values here."
-    ReinforcementAgent.__init__(self, **args)
-    self._qValues = defaultdict(lambda:defaultdict(lambda:0))
-    
-
-  def getQValue(self, state, action):
     """
-      Returns Q(state,action)
-    """
-    return self._qValues[state][action]
+        Q-Learning Agent
 
-  def setQValue(self,state,action,value):
+        Instance variables you have access to
+            - self.epsilon (exploration prob)
+            - self.alpha (learning rate)
+            - self.discount (discount rate aka gamma)
+
+        Functions you should use
+            - self.getLegalActions(state)
+                which returns legal actions for a state
+            - self.getQValue(state,action)
+                which returns Q(state,action)
+            - self.setQValue(state,action,value)
+                which sets Q(state,action) := value
+        
+        !!!Important!!!
+        NOTE: please avoid using self._qValues directly to make code cleaner
     """
-      Sets the Qvalue for [state,action] to the given value
-    """
-    self._qValues[state][action] = value
+    def __init__(self, **args):
+        "We initialize agent and Q-values here."
+        ReinforcementAgent.__init__(self, **args)
+        self._qValues = defaultdict(lambda:defaultdict(lambda:0))
+        
+
+    def getQValue(self, state, action):
+        """
+            Returns Q(state,action)
+        """
+        return self._qValues[state][action]
+
+    def setQValue(self,state,action,value):
+        """
+            Sets the Qvalue for [state,action] to the given value
+        """
+        self._qValues[state][action] = value
 
 #---------------------#start of your code#---------------------#
 
-  def getValue(self, state):
-    """
-      Returns max_action Q(state,action)
-      where the max is over legal actions.
-    """
-    
-    possibleActions = self.getLegalActions(state)
-    #If there are no legal actions, return 0.0
-    if len(possibleActions) == 0:
-    	return 0.0
+    def getValue(self, state):
+        """
+            Returns max_action Q(state,action)
+            where the max is over legal actions.
+        """
+        
+        possibleActions = self.getLegalActions(state)
+        #If there are no legal actions, return 0.0
+        if len(possibleActions) == 0:
+            return 0.0
 
-    "*** YOUR CODE HERE ***"
-    raise NotImplementedError
+        max_value = self.getQValue(state, possibleActions[0])
+        for action in possibleActions:
+            value = self.getQValue(state, action)
+            max_value = value if value > max_value else max_value
 
-    return 0.
-    
-  def getPolicy(self, state):
-    """
-      Compute the best action to take in a state. 
-      
-    """
-    possibleActions = self.getLegalActions(state)
+        return max_value
+        
+    def getPolicy(self, state):
+        """
+            Compute the best action to take in a state. 
+            
+        """
+        possibleActions = self.getLegalActions(state)
 
-    #If there are no legal actions, return None
-    if len(possibleActions) == 0:
-    	return None
-    
-    best_action = None
+        #If there are no legal actions, return None
+        if len(possibleActions) == 0:
+            return None
+        
+        max_value = self.getValue(state)
+        for action in possibleActions:
+            if self.getQValue(state, action) == max_value:
+                return action
 
-    "*** YOUR CODE HERE ***"
-    raise NotImplementedError
+        return None
 
-    return best_action
+    def getAction(self, state):
+        """
+            Compute the action to take in the current state, including exploration.  
+            
+            With probability self.epsilon, we should take a random action.
+            otherwise - the best policy action (self.getPolicy).
 
-  def getAction(self, state):
-    """
-      Compute the action to take in the current state, including exploration.  
-      
-      With probability self.epsilon, we should take a random action.
-      otherwise - the best policy action (self.getPolicy).
+            HINT: You might want to use util.flipCoin(prob)
+            HINT: To pick randomly from a list, use random.choice(list)
 
-      HINT: You might want to use util.flipCoin(prob)
-      HINT: To pick randomly from a list, use random.choice(list)
+        """
+        
+        # Pick Action
+        possibleActions = self.getLegalActions(state)
+        action = None
+        
+        #If there are no legal actions, return None
+        if len(possibleActions) == 0:
+            return None
 
-    """
-    
-    # Pick Action
-    possibleActions = self.getLegalActions(state)
-    action = None
-    
-    #If there are no legal actions, return None
-    if len(possibleActions) == 0:
-    	return None
+        #agent parameters:
+        epsilon = self.epsilon
 
-    #agent parameters:
-    epsilon = self.epsilon
+        if util.flipCoin(epsilon):
+            action = random.choice(possibleActions)
+        else:
+            action = self.getPolicy(state)   
 
-    "*** YOUR CODE HERE ***"
-    raise NotImplementedError    
+        return action
 
-    return action
+    def update(self, state, action, nextState, reward):
+        """
+            You should do your Q-Value update here
 
-  def update(self, state, action, nextState, reward):
-    """
-      You should do your Q-Value update here
-
-      NOTE: You should never call this function,
-      it will be called on your behalf
+            NOTE: You should never call this function,
+            it will be called on your behalf
 
 
-    """
-    #agent parameters
-    gamma = self.discount
-    learning_rate = self.alpha
-    
-    "*** YOUR CODE HERE ***"
-    raise NotImplementedError
-    
-    reference_qvalue = PleaseImplementMe
-    updated_qvalue = PleaseImplementMe
+        """
+        #agent parameters
+        gamma = self.discount
+        lr = self.alpha
 
-    self.setQValue(PleaseImplementMe,PleaseImplementMe,updated_qvalue)
+        reference_qvalue = reward + gamma * self.getValue(nextState)
+        updated_qvalue = (1 - lr) * self.getQValue(state, action) + \
+                         lr * reference_qvalue
+
+        self.setQValue(state, action, updated_qvalue)
 
 
 #---------------------#end of your code#---------------------#
@@ -138,37 +140,37 @@ class QLearningAgent(ReinforcementAgent):
 
 
 class PacmanQAgent(QLearningAgent):
-  "Exactly the same as QLearningAgent, but with different default parameters"
+    "Exactly the same as QLearningAgent, but with different default parameters"
 
-  def __init__(self, epsilon=0.05,gamma=0.8,alpha=0.2, numTraining=0, **args):
-    """
-    These default parameters can be changed from the pacman.py command line.
-    For example, to change the exploration rate, try:
-        python pacman.py -p PacmanQLearningAgent -a epsilon=0.1
+    def __init__(self, epsilon=0.05,gamma=0.8,alpha=0.2, numTraining=0, **args):
+        """
+        These default parameters can be changed from the pacman.py command line.
+        For example, to change the exploration rate, try:
+                python pacman.py -p PacmanQLearningAgent -a epsilon=0.1
 
-    alpha    - learning rate
-    epsilon  - exploration rate
-    gamma    - discount factor
-    numTraining - number of training episodes, i.e. no learning after these many episodes
-    """
-    args['epsilon'] = epsilon
-    args['gamma'] = gamma
-    args['alpha'] = alpha
-    args['numTraining'] = numTraining
-    self.index = 0  # This is always Pacman
-    QLearningAgent.__init__(self, **args)
+        alpha    - learning rate
+        epsilon  - exploration rate
+        gamma    - discount factor
+        numTraining - number of training episodes, i.e. no learning after these many episodes
+        """
+        args['epsilon'] = epsilon
+        args['gamma'] = gamma
+        args['alpha'] = alpha
+        args['numTraining'] = numTraining
+        self.index = 0  # This is always Pacman
+        QLearningAgent.__init__(self, **args)
 
-  def getAction(self, state):
-    """
-    Simply calls the getAction method of QLearningAgent and then
-    informs parent of action for Pacman.  Do not change or remove this
-    method.
-    """
-    action = QLearningAgent.getAction(self,state)
-    self.doAction(state,action)
-    return action
+    def getAction(self, state):
+        """
+        Simply calls the getAction method of QLearningAgent and then
+        informs parent of action for Pacman.  Do not change or remove this
+        method.
+        """
+        action = QLearningAgent.getAction(self,state)
+        self.doAction(state,action)
+        return action
 
 
 
 class ApproximateQAgent(PacmanQAgent):
-    pass
+        pass
