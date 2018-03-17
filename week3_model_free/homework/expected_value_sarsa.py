@@ -159,12 +159,11 @@ class SoftMaxEVSarsaAgent():
       - self.discount (discount rate aka gamma)
 
   """
-  def __init__(self,alpha,epsilon,discount,theta,getLegalActions):
+  def __init__(self,alpha,theta,discount,getLegalActions):
     "We initialize agent and Q-values here."
     self.getLegalActions= getLegalActions
     self._qValues = defaultdict(lambda:defaultdict(lambda:0))
     self.alpha = alpha
-    self.epsilon = epsilon
     self.discount = discount
     self.theta = theta
     
@@ -195,14 +194,12 @@ class SoftMaxEVSarsaAgent():
       return 0.0
 
     #You'll need this to estimate action probabilities
-    epsilon = self.epsilon
     theta = self.theta
     values = np.array([self.getQValue(state, a) for a in possibleActions])
     exps = np.exp(values / theta - np.max(values / theta))
     probs = exps / np.sum(exps)
     
-    value = epsilon * np.mean(values) \
-            + (1 - epsilon) * np.sum(probs * values)
+    value = np.sum(probs * values)
     return value
     
   def getPolicy(self, state):
@@ -216,15 +213,9 @@ class SoftMaxEVSarsaAgent():
     if len(possibleActions) == 0:
       return None
     
-    epsilon = self.epsilon
-    theta = self.theta
-    values = np.array([self.getQValue(state, a) for a in possibleActions])
-    exps = np.exp(values / theta - np.max(values / theta))
-    probs = exps / np.sum(exps)
+    best_action = possibleActions[np.argmax([self.getQValue(state, a) for a in possibleActions])]
 
-    action = np.random.choice(possibleActions, p=probs)
-
-    return action
+    return best_action
 
   def getAction(self, state):
     """
@@ -247,12 +238,13 @@ class SoftMaxEVSarsaAgent():
       return None
 
     #agent parameters:
-    epsilon = self.epsilon
-
-    if np.random.random()<=epsilon:
-      return random.choice(possibleActions)
-    else:
-      action = self.getPolicy(state)
+    theta = self.theta
+    values = np.array([self.getQValue(state, a) for a in possibleActions])
+    exps = np.exp(values / theta - np.max(values / theta))
+    probs = exps / np.sum(exps)
+    
+    action = np.random.choice(possibleActions, p=probs)
+    
     return action
 
   def update(self, state, action, nextState, reward):
