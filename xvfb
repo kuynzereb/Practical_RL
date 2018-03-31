@@ -1,7 +1,7 @@
 #taken from https://gist.github.com/jterrace/2911875
 XVFB=/usr/bin/Xvfb
 XVFBARGS=":1 -screen 0 1024x768x24 -ac +extension GLX +render -noreset"
-PIDFILE=./xvfb.pid
+PIDFILE=/var/run/xvfb.pid
 case "$1" in
   start)
     echo -n "Starting virtual X frame buffer: Xvfb"
